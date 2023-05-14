@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 
 namespace Luval.MN.Core
 {
-    public class SpeechFragment
+    public class SpeechText
     {
+        public string? Id { get; set; }
         public string? Text { get; set; }
         public TimeSpan? Duration { get; set; }
+        public double? Confidence { get; set; }
     }
 }
