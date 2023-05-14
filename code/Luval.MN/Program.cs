@@ -33,7 +33,7 @@ namespace Luval.MN
         /// <param name="arguments"></param>
         static void DoAction(ConsoleSwitches arguments)
         {
-            var file = @"C:\Users\CH489GT\Downloads\Junaid.m4a";
+            var file = arguments["/file"];
             var openAI = arguments["/openai"];
             var msfkey = arguments["/msft"];
             var logging = new CompositeLogger(new ILogger[] { new ColorConsoleLogger(), new FileLogger() });
