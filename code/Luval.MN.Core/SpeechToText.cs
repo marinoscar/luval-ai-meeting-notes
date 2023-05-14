@@ -1,6 +1,7 @@
 ﻿using Microsoft.CognitiveServices.Speech;
 using Microsoft.CognitiveServices.Speech.Audio;
 using Microsoft.Extensions.Logging;
+using System.Net.Http.Headers;
 using System.Security;
 using System.Text.Json.Serialization;
 
@@ -24,9 +25,15 @@ namespace Luval.MN.Core
 
         public SpeechResult GetText(string fileName)
         {
+            if(string.IsNullOrEmpty(fileName)) throw new ArgumentNullException(nameof(fileName));
+
+            var converter = new AudioFormatConverter(fileName, Logger);
+            fileName = converter.Convert();
+
             Logger.LogInformation("Starting to work on file {0}", fileName);
             var speechConfig = SpeechConfig.FromSubscription(Config.Key, Config.Region);
             speechConfig.SpeechRecognitionLanguage = Config.Language;
+
             using (var audioConfig = AudioConfig.FromWavFileInput(fileName))
             {
                 using (var speech = new SpeechRecognizer(speechConfig, audioConfig))
@@ -93,7 +100,7 @@ namespace Luval.MN.Core
 
         private void Speech_Recognizing(object? sender, SpeechRecognitionEventArgs e)
         {
-            Logger?.LogDebug("Id: {0} Duration: {1} Text: {2}",e.Result?.ResultId,  e.Result?.Duration, e.Result?.Text);
+            Logger?.LogDebug("Id: {0} Duration: {1} Text: {2}", e.Result?.ResultId, e.Result?.Duration, e.Result?.Text);
         }
     }
 }

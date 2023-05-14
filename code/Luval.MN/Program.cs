@@ -32,12 +32,14 @@ namespace Luval.MN
         /// <param name="arguments"></param>
         static void DoAction(ConsoleSwitches arguments)
         {
-            var file = @"C:\Users\CH489GT\Downloads\Test.wav";
+            var file = @"C:\Users\CH489GT\Downloads\Junaid.m4a";
             var openAI = arguments["/openai"];
             var msfkey = arguments["/msft"];
             var logging = new CompositeLogger(new ILogger[] { new ColorConsoleLogger(), new FileLogger() });
             var speech = new SpeechToText(new Speech2TextConfig() { Key = msfkey, Region = "southcentralus" }, logging);
             var res = speech.GetText(file);
+            File.WriteAllText("Transcript.txt", res.Text);
+            WriteLineInfo(res?.Text);
 
         }
 
