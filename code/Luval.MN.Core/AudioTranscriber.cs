@@ -24,7 +24,7 @@ namespace Luval.MN.Core
         public Speech2TextConfig Config { get; private set; }
         public ILogger Logger { get; private set; }
 
-        public SpeechResult GetText(string fileName)
+        public async Task<SpeechResult> TransacribeAsync(string fileName)
         {
             if (string.IsNullOrEmpty(fileName)) throw new ArgumentNullException(nameof(fileName));
 
@@ -34,20 +34,21 @@ namespace Luval.MN.Core
             Logger.LogInformation("Starting to work on file {0}", fileName);
             var speechConfig = SpeechConfig.FromSubscription(Config.Key, Config.Region);
             speechConfig.SpeechRecognitionLanguage = Config.Language;
-            speechConfig.SetProperty("ConversationTranscriptionInRoomAndOnline", "true");
 
             using (var audioConfig = AudioConfig.FromWavFileInput(fileName))
             {
-                var meetingID = Guid.NewGuid().ToString();
-                using (var transcriber = new ConversationTranscriber(audioConfig))
+                using (var speech = new SpeechRecognizer(speechConfig, audioConfig))
                 {
                     _stopRecognition = new TaskCompletionSource<int>();
                     _result = new SpeechResult();
                     _speechText = new Dictionary<string, SpeechText>();
-                    RegisterTranscriptionEvents(transcriber);
+                    RegisterEvents(speech);
+
+                    await speech.StartContinuousRecognitionAsync();
 
                     Task.WaitAny(new[] { _stopRecognition.Task }, Config.Timeout);
 
+                    await speech.StopContinuousRecognitionAsync();
                 }
             }
             _result.Text = string.Join(Environment.NewLine, _speechText.Values.Select(i => i.Text));
@@ -55,55 +56,57 @@ namespace Luval.MN.Core
             return _result;
         }
 
-        #region Transcription Events
-        private void RegisterTranscriptionEvents(ConversationTranscriber transcriber)
+
+        #region Audio Events
+        private void RegisterEvents(SpeechRecognizer speech)
         {
-            transcriber.Transcribed += Transcriber_Transcribed;
-            transcriber.Transcribing += Transcriber_Transcribing;
-            transcriber.Canceled += Transcriber_Canceled;
-            transcriber.SessionStarted += Transcriber_SessionStarted;
-            transcriber.SessionStopped += Transcriber_SessionStopped;
-            transcriber.SpeechEndDetected += Transcriber_SpeechEndDetected;
-            transcriber.SpeechStartDetected += Transcriber_SpeechStartDetected;
+            speech.Recognizing += Speech_Recognizing; ;
+            speech.Recognized += Speech_Recognized;
+            speech.SessionStopped += Speech_SessionStopped;
+            speech.SessionStarted += Speech_SessionStarted;
+            speech.SpeechEndDetected += Speech_SpeechEndDetected;
+            speech.SpeechStartDetected += Speech_SpeechStartDetected;
+            speech.Canceled += Speech_Canceled;
         }
 
-        private void Transcriber_SpeechStartDetected(object? sender, RecognitionEventArgs e)
+        private void Speech_Recognizing(object? sender, SpeechRecognitionEventArgs e)
         {
-            Logger.LogInformation($"Session: {e.SessionId} - Event: SpeechStartDetected - Offset {e.Offset}");
+            Logger.LogDebug($"Session Id: {e.SessionId} Event: Recognized - Result Id: {e.Result.ResultId} - Characters: {e.Result.Text.Length} Reason: {e.Result.Reason} - Offset {e.Offset}");
         }
 
-        private void Transcriber_SpeechEndDetected(object? sender, RecognitionEventArgs e)
+        private void Speech_Canceled(object? sender, SpeechRecognitionCanceledEventArgs e)
         {
-            Logger.LogInformation($"Session: {e.SessionId} - Event: SpeechEndDetected - Offset {e.Offset}");
-        }
+            Logger.LogInformation($"Session Id: {e.SessionId} Event: Canceled - Reason: {e.Reason} - Offset {e.Offset}");
 
-        private void Transcriber_SessionStopped(object? sender, SessionEventArgs e)
-        {
-            Logger.LogInformation($"Session: {e.SessionId} - Event: SessionStopped");
-            _stopRecognition.TrySetResult(0);
-        }
-
-        private void Transcriber_SessionStarted(object? sender, SessionEventArgs e)
-        {
-            Logger.LogInformation($"Session: {e.SessionId} - Event: SessionStarted");
-        }
-
-        private void Transcriber_Canceled(object? sender, ConversationTranscriptionCanceledEventArgs e)
-        {
-            Logger.LogInformation($"Session: {e.SessionId} - Event: Canceled - Reason: {e.Reason} - Offset {e.Offset}");
             if (e.Reason == CancellationReason.Error)
-                Logger.LogError($"ERROR ON Session: {e.SessionId} - Event: Canceled - Reason: {e.Reason} - Error Code: {e.ErrorCode} - Error Details: {e.ErrorDetails} - Offset {e.Offset}");
+                Logger.LogError($"ERROR: Session Id: {e.SessionId} Error Code: {e.ErrorCode} Error Reason {e.ErrorDetails}");
             _stopRecognition.TrySetResult(0);
         }
 
-        private void Transcriber_Transcribing(object? sender, ConversationTranscriptionEventArgs e)
+        private void Speech_SpeechStartDetected(object? sender, RecognitionEventArgs e)
         {
-            Logger.LogInformation($"Session: {e.SessionId} - Event: Transcribing - Characters Processed: {e.Result.Text.Length} - Offset {e.Offset}");
+            Logger.LogInformation($"Session Id: {e.SessionId} Event: SpeechStartDetected - Offset {e.Offset}");
         }
 
-        private void Transcriber_Transcribed(object? sender, ConversationTranscriptionEventArgs e)
+        private void Speech_SpeechEndDetected(object? sender, RecognitionEventArgs e)
         {
-            Logger.LogInformation($"Session: {e.SessionId} - Event: Transcribed - Characters Processed: {e.Result.Text.Length} - Result Id {e.Result.ResultId} - User Id {e.Result.UserId} - Offset {e.Offset}");
+            Logger.LogInformation($"Session Id: {e.SessionId} Event: SpeechEndDetected - Offset {e.Offset}");
+        }
+
+        private void Speech_SessionStarted(object? sender, SessionEventArgs e)
+        {
+            Logger.LogInformation($"Session Id: {e.SessionId} Event: SessionStarted");
+        }
+
+        private void Speech_SessionStopped(object? sender, SessionEventArgs e)
+        {
+            Logger.LogInformation($"Session Id: {e.SessionId} Event: SessionStopped");
+            _stopRecognition.TrySetResult(0);
+        }
+
+        private void Speech_Recognized(object? sender, SpeechRecognitionEventArgs e)
+        {
+            Logger.LogDebug($"Session Id: {e.SessionId} Event: Recognized - Result Id: {e.Result.ResultId} - Characters: {e.Result.Text.Length} Reason: {e.Result.Reason} - Offset {e.Offset}");
             if (e.Result == null) return;
             _speechText[e.Result.ResultId] = new SpeechText()
             {
@@ -112,11 +115,11 @@ namespace Luval.MN.Core
                 Duration = e.Result.Duration,
                 Text = e.Result.Text,
                 Confidence = 1d,
-                SpeakerId = e.Result.UserId,
-                ExtendedProperties = new Dictionary<string, object> {
-                    { "UtteranceId", e.Result.UtteranceId },
+                ExtendedProperties = new Dictionary<string, object> 
+                {
+                    { "Offset", e.Offset },
                     { "OffsetInTicks", e.Result.OffsetInTicks },
-                    { "Reason", e.Result.Reason.ToString() },
+                    { "Properties", e.Result.Properties },
                 }
             };
         }

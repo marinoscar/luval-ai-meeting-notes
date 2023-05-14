@@ -44,6 +44,11 @@ namespace Luval.MN.Core
                 Logger.LogInformation($"File {AudioFile.Name} do not require conversion");
                 return;
             }
+            if (File.Exists(destionationFileName))
+            {
+                Logger.LogInformation($"File {destionationFileName} already exist, using that instead");
+                return;
+            }
             Logger.LogInformation($"Converting {AudioFile.Name} to {destionationFileName}");
             try
             {
