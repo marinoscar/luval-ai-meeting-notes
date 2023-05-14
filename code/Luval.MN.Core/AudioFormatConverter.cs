@@ -13,7 +13,7 @@ namespace Luval.MN.Core
     public class AudioFormatConverter
     {
 
-        private string[] _extensions = new[] { ".wav", ".m4a", "wma", "mp3" };
+        private string[] _extensions = new[] { ".wav", ".m4a", ".wma", ".mp3" };
         public FileInfo AudioFile { get; private set; }
         public ILogger Logger { get; private set; }
 
