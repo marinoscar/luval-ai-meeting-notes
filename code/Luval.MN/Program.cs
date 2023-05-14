@@ -1,6 +1,7 @@
 ﻿using Luval.Logging.Providers;
 using Luval.MN.Core;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace Luval.MN
 {
@@ -36,10 +37,11 @@ namespace Luval.MN
             var openAI = arguments["/openai"];
             var msfkey = arguments["/msft"];
             var logging = new CompositeLogger(new ILogger[] { new ColorConsoleLogger(), new FileLogger() });
-            var speech = new SpeechToText(new Speech2TextConfig() { Key = msfkey, Region = "southcentralus" }, logging);
+            var speech = new AudioTranscriber(new Speech2TextConfig() { Key = msfkey, Region = "southcentralus" }, logging);
             var res = speech.GetText(file);
             File.WriteAllText("Transcript.txt", res.Text);
-            WriteLineInfo(res?.Text);
+            var json = JsonConvert.SerializeObject(res, Formatting.Indented);
+            File.WriteAllText("Transcript.json", json);
 
         }
 
