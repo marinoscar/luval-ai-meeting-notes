@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "Luval.MN": {
-      "commandName": "Project",
-      "commandLineArgs": "/openai af571342449d40c69684ac6885948ed2 /msft c58f9c133e8047fdae756daf3f51a923"
-    }
-  }
-}
