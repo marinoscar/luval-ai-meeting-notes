@@ -7,6 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Luval.Logging" Version="2.1.0" />
+    <PackageReference Include="Luval.OpenAI" Version="1.0.0" />
     <PackageReference Include="Microsoft.CognitiveServices.Speech" Version="1.28.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
     <PackageReference Include="NAudio" Version="2.1.0" />
@@ -14,8 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\luval-gpt-agent\code\Luval.GPT.Agent.Core\Luval.GPT.Agent.Core.csproj" />
-    <ProjectReference Include="..\..\..\luval-logging\code\Luval.Logging\Luval.Logging.csproj" />
-    <ProjectReference Include="..\..\..\Luval.OpenAI\code\Luval.OpenAI\Luval.OpenAI.csproj" />
   </ItemGroup>
 
 </Project>
