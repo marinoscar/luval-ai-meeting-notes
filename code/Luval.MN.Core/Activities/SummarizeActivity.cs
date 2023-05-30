@@ -1,4 +1,5 @@
-﻿using Luval.OpenAI.Chat;
+﻿using Luval.GPT.Agent.Core.Activity;
+using Luval.OpenAI.Chat;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
