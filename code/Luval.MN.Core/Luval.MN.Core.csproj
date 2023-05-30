@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\luval-gpt-agent\code\Luval.GPT.Agent.Core\Luval.GPT.Agent.Core.csproj" />
     <ProjectReference Include="..\..\..\luval-logging\code\Luval.Logging\Luval.Logging.csproj" />
     <ProjectReference Include="..\..\..\Luval.OpenAI\code\Luval.OpenAI\Luval.OpenAI.csproj" />
   </ItemGroup>

@@ -1,5 +1,6 @@
 ﻿using Luval.Logging.Providers;
 using Luval.MN.Core;
+using Luval.MN.Core.Activities;
 using Luval.OpenAI;
 using Luval.OpenAI.Chat;
 using Luval.OpenAI.Models;
@@ -38,35 +39,7 @@ namespace Luval.MN
         /// <param name="arguments"></param>
         static void DoAction(ConsoleSwitches arguments)
         {
-            var sw = Stopwatch.StartNew();
-            var file = arguments["/file"];
-            var openAI = arguments["/openai"];
-            var msfkey = arguments["/msft"];
-            var logging = new CompositeLogger(new ILogger[] { new ColorConsoleLogger(), new FileLogger() });
-
-            //var speech = new AudioTranscriber(new Speech2TextConfig() { Key = msfkey, Region = "southcentralus" }, logging);
-            //var res = speech.TransacribeAsync(file).Result;
-            //File.WriteAllText("Transcript.txt", res.Text);
-            //var json = JsonConvert.SerializeObject(res, Formatting.Indented);
-            //File.WriteAllText("Transcript.json", json);
-
-            var transcript = File.ReadAllText("Transcript.txt");
-
-            var chatEndpoint = ChatEndpoint.CreateAzure(
-                new ApiAuthentication(new NetworkCredential("", openAI).SecurePassword), "ey-sandbox", Model.Gpt432k.Id);
-            chatEndpoint.AddUserMessage("This is a test");
-            var x = chatEndpoint.SendAsync(Model.Gpt432k).Result;
-
-            var analyzer = new TranscriptAnalyzerGpt35(logging, transcript, chatEndpoint);
-
-            var actionItems = analyzer.ExecuteAsync().Result;
-            var json1 = JsonConvert.SerializeObject(actionItems, Formatting.Indented);
-            File.WriteAllText("Analisys.json", json1);
-
-            sw.Stop();
-
-            WriteLine(ConsoleColor.Green, $"Process Completed - Total Duration {sw.Elapsed}");
-            Console.ReadLine();
+            
 
         }
 
